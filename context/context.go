@@ -30,8 +30,8 @@ import (
 
 	"github.com/Shopify/goreferrer"
 	"github.com/fatih/structs"
+	gojson "github.com/goccy/go-json"
 	"github.com/iris-contrib/schema"
-	jsoniter "github.com/json-iterator/go"
 	"github.com/kataras/golog"
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/russross/blackfriday/v2"
@@ -2366,7 +2366,7 @@ type internalJSONDecoder interface {
 
 func (cfg JSONReader) getDecoder(r io.Reader, globalShouldOptimize bool) (decoder internalJSONDecoder) {
 	if cfg.Optimize || globalShouldOptimize {
-		decoder = jsoniter.ConfigCompatibleWithStandardLibrary.NewDecoder(r)
+		decoder = gojson.NewDecoder(r)
 	} else {
 		decoder = json.NewDecoder(r)
 	}
@@ -2391,7 +2391,7 @@ func (ctx *Context) ReadJSON(outPtr interface{}, opts ...JSONReader) error {
 
 	unmarshaler := json.Unmarshal
 	if shouldOptimize {
-		unmarshaler = jsoniter.Unmarshal
+		unmarshaler = gojson.Unmarshal
 	}
 
 	return ctx.UnmarshalBody(outPtr, UnmarshalerFunc(unmarshaler))
@@ -2478,8 +2478,8 @@ var (
 			return v.Offset == 0 && v.Error() == "unexpected end of JSON input"
 		}
 
-		// when optimization is enabled, the jsoniter will report the following error:
-		return strings.Contains(err.Error(), "readObjectStart: expect {")
+		// when optimization is enabled, the go-json will report the following error:
+		return strings.Contains(err.Error(), "looking for beginning of value")
 	}
 
 	// IsErrPath can be used at `context#ReadForm` and `context#ReadQuery`.
@@ -3560,7 +3560,7 @@ func WriteJSON(writer io.Writer, v interface{}, options JSON, optimize bool) (in
 	if indent := options.Indent; indent != "" {
 		marshalIndent := json.MarshalIndent
 		if optimize {
-			marshalIndent = jsoniter.ConfigCompatibleWithStandardLibrary.MarshalIndent
+			marshalIndent = gojson.MarshalIndent
 		}
 
 		result, err = marshalIndent(v, "", indent)
@@ -3568,7 +3568,7 @@ func WriteJSON(writer io.Writer, v interface{}, options JSON, optimize bool) (in
 	} else {
 		marshal := json.Marshal
 		if optimize {
-			marshal = jsoniter.ConfigCompatibleWithStandardLibrary.Marshal
+			marshal = gojson.Marshal
 		}
 
 		result, err = marshal(v)
@@ -3636,6 +3636,28 @@ func stringToBytes(s string) []byte {
 // inside `ctx.JSON`.
 var DefaultJSONOptions = JSON{}
 
+type JSONEncoder interface {
+	SetEscapeHTML(b bool)
+	SetIndent(prefix string, indent string)
+	Encode(v interface{}) error
+}
+
+type JSONDecoder interface {
+}
+
+func (ctx *Context) getJSONEncoder(options JSON) (enc JSONEncoder) {
+	if ctx.shouldOptimize() {
+		enc = gojson.NewEncoder(ctx.writer)
+	} else {
+		enc = json.NewEncoder(ctx.writer)
+	}
+
+	enc.SetEscapeHTML(!options.UnescapeHTML)
+	enc.SetIndent(options.Prefix, options.Indent)
+
+	return
+}
+
 // JSON marshals the given interface object and writes the JSON response to the client.
 // If the value is a compatible `proto.Message` one
 // then it only uses the options.Proto settings to marshal.
@@ -3649,19 +3671,7 @@ func (ctx *Context) JSON(v interface{}, opts ...JSON) (n int, err error) {
 	ctx.ContentType(ContentJSONHeaderValue)
 
 	if options.StreamingJSON {
-		if ctx.shouldOptimize() {
-			jsoniterConfig := jsoniter.Config{
-				EscapeHTML:    !options.UnescapeHTML,
-				IndentionStep: 4,
-			}.Froze()
-			enc := jsoniterConfig.NewEncoder(ctx.writer)
-			err = enc.Encode(v)
-		} else {
-			enc := json.NewEncoder(ctx.writer)
-			enc.SetEscapeHTML(!options.UnescapeHTML)
-			enc.SetIndent(options.Prefix, options.Indent)
-			err = enc.Encode(v)
-		}
+		err := ctx.getJSONEncoder(options).Encode(v)
 
 		if err != nil {
 			ctx.app.Logger().Debugf("JSON: %v", err)
@@ -3700,7 +3710,7 @@ func WriteJSONP(writer io.Writer, v interface{}, options JSONP, optimize bool) (
 	if indent := options.Indent; indent != "" {
 		marshalIndent := json.MarshalIndent
 		if optimize {
-			marshalIndent = jsoniter.ConfigCompatibleWithStandardLibrary.MarshalIndent
+			marshalIndent = gojson.MarshalIndent
 		}
 
 		result, err := marshalIndent(v, "", indent)
@@ -3713,7 +3723,7 @@ func WriteJSONP(writer io.Writer, v interface{}, options JSONP, optimize bool) (
 
 	marshal := json.Marshal
 	if optimize {
-		marshal = jsoniter.ConfigCompatibleWithStandardLibrary.Marshal
+		marshal = gojson.Marshal
 	}
 
 	result, err := marshal(v)

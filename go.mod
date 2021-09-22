@@ -14,12 +14,12 @@ require (
 	github.com/fatih/structs v1.1.0
 	github.com/flosch/pongo2/v4 v4.0.2
 	github.com/go-redis/redis/v8 v8.11.3
+	github.com/goccy/go-json v0.7.8
 	github.com/golang/snappy v0.0.4
 	github.com/google/uuid v1.3.0
 	github.com/iris-contrib/httpexpect/v2 v2.0.5
 	github.com/iris-contrib/jade v1.1.4
 	github.com/iris-contrib/schema v0.0.6
-	github.com/json-iterator/go v1.1.12
 	github.com/kataras/blocks v0.0.4
 	github.com/kataras/golog v0.1.7
 	github.com/kataras/jwt v0.1.2

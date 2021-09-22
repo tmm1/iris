@@ -28,6 +28,8 @@ The codebase for Dependency Injection, Internationalization and localization and
 
 ## Fixes and Improvements
 
+- Replace json-iterator with go-json as requested at [#1818](https://github.com/kataras/iris/issues/1818).
+
 - New `iris.IsErrEmptyJSON(err) bool` which reports whether the given "err" is caused by a
 `Context.ReadJSON` call when the request body didn't start with { (or it was totally empty). 
 
