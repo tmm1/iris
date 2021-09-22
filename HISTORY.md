@@ -19,9 +19,9 @@
 
 Developers are not forced to upgrade if they don't really need it. Upgrade whenever you feel ready.
 
-**How to upgrade**: Open your command-line and execute this command: `go get github.com/kataras/iris/v12@latest`.
+**How to upgrade**: Open your command-line and execute this command: `go get github.com/kataras/iris/v12@master`.
 
-# Next
+# Next (currently v12.2.0-alpha3)
 
 This release introduces new features and some breaking changes.
 The codebase for Dependency Injection, Internationalization and localization and more have been simplified a lot (fewer LOCs and easier to read and follow up).
