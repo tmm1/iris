@@ -9,7 +9,7 @@ require (
 	github.com/aymerick/raymond v2.0.3-0.20180322193309-b565731e1464+incompatible
 	github.com/dgraph-io/badger v1.6.0
 	github.com/eknkc/amber v0.0.0-20171010120322-cdade1c07385
-	github.com/etcd-io/bbolt v1.3.3
+	go.etcd.io/bbolt v1.3.3
 	github.com/fatih/structs v1.1.0
 	github.com/gavv/httpexpect v2.0.0+incompatible
 	github.com/gomodule/redigo v1.7.1-0.20190724094224-574c33c3df38
